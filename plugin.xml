@@ -1,0 +1,152 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="cordova-plugin-qqsdk" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>QQSDK</name>
+    <keywords>cordova,cordova-plugin,daiwei,QQ,QQSDK</keywords>
+    <description>cordova 集成QQSDK</description>
+    <license>MIT</license>
+    <js-module src="www/QQSDK.js" name="QQSDK">
+        <clobbers target="QQSDK" />
+    </js-module>
+    <preference name="QQ_APP_ID" />
+
+    <!-- android -->
+    <platform name="android">
+        <!-- 依赖 -->
+        <lib-file src="src/android/open_sdk_3.5.12.2_r97423a8_lite.jar" />
+        <source-file src="src/android/QQSDKPlugin.java" target-dir="src/com/daiwei/qqsdk/plugin" />
+
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="QQSDK" >
+                <param name="android-package" value="com.daiwei.qqsdk.plugin.QQSDKPlugin"/>
+                <param name="onload" value="true" />
+            </feature>
+            <!--whitelist for QQ SDK-->
+            <access origin = "https://openmobile.qq.com/*"/>
+            <access origin = "http://qzonestyle.gtimg.cn/*"/>
+            <access origin = "http://pub.idqqimg.com/*"/>
+            <access origin = "http://qzs.qq.com/*"/>
+            <access origin = "http://m.qzone.com/*"/>
+            <access origin = "http://*.ptlogin2.qq.com/*"/>
+            <access origin = "http://*.qq.com/*"/>
+            <access origin = "http://q2.qlogo.cn/*" />
+
+            <preference name="QQ_APP_ID" value="$QQ_APP_ID" />
+        </config-file>
+
+        <!--permission for QQ SDK -->
+        <config-file target="app/src/main/AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        </config-file>
+        <!--QQ webview Auth Activity -->
+        <config-file target="app/src/main/AndroidManifest.xml" parent="/manifest/application">
+        <activity
+                android:name="com.tencent.tauth.AuthActivity"
+                android:noHistory="true"
+                android:launchMode="singleTask" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tencent$QQ_APP_ID"/>
+            </intent-filter>
+        </activity>
+            <activity
+            android:name="com.tencent.connect.common.AssistActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+            </activity>
+        </config-file>
+    </platform>
+    <!-- ios -->
+    <platform name="ios">
+        <!-- 插件 -->
+        <header-file src="src/ios/QQSDKPlugin.h" />
+        <source-file src="src/ios/QQSDKPlugin.m" />
+        <!-- 配置 -->
+        <config-file target="config.xml" parent="/*">
+            <feature name="QQSDK">
+                <param name="ios-package" value="CDVQQSDK"/>
+                <param name="onload" value="true" />
+            </feature>
+            <preference name="QQ_APP_ID" value="$QQ_APP_ID" />
+        </config-file>
+
+        <!--set ios URLTypes for QQ SDK -->
+        <config-file target="*-Info.plist" parent="CFBundleURLTypes">
+        <array>
+            <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>tencentopenapi</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>tencent$QQ_APP_ID</string>
+            </array>
+            </dict>
+        </array>
+        </config-file>
+
+        <!--scheme query whitlist-->
+        <config-file platform="ios" target="*-Info.plist" parent="LSApplicationQueriesSchemes">
+            <array>
+                <string>mqqapi</string>
+                <string>mqq</string>
+                <string>mqqOpensdkSSoLogin</string>
+                <string>mqqconnect</string>
+                <string>mqqopensdkdataline</string>
+                <string>mqqopensdkgrouptribeshare</string>
+                <string>mqqopensdkfriend</string>
+                <string>mqqopensdkapi</string>
+                <string>mqqopensdkapiV2</string>
+                <string>mqqopensdkapiV3</string>
+                <string>mqqopensdkapiV4</string>
+                <string>mqzoneopensdk</string>
+                <string>wtloginmqq</string>
+                <string>wtloginmqq2</string>
+                <string>mqqwpa</string>
+                <string>mqzone</string>
+                <string>mqzonev2</string>
+                <string>mqzoneshare</string>
+                <string>wtloginqzone</string>
+                <string>mqzonewx</string>
+                <string>mqzoneopensdkapiV2</string>
+                <string>mqzoneopensdkapi19</string>
+                <string>mqzoneopensdkapi</string>
+                <string>mqzoneopensdk</string>
+                <string>mqqgamebindinggroup</string>
+                <string>tencentapi.qq.reqContent</string>
+                <string>tencentapi.qzone.reqContent</string>
+                <string>tim</string>
+                <string>timapi</string>
+                <string>timopensdkfriend</string>
+                <string>timwpa</string>
+                <string>timgamebindinggroup</string>
+                <string>timapiwallet</string>
+                <string>timOpensdkSSoLogin</string>
+                <string>wtlogintim</string>
+                <string>timopensdkgrouptribeshare</string>
+                <string>timopensdkapiV4</string>
+                <string>timgamebindinggroup</string>
+                <string>timopensdkdataline</string>
+                <string>wtlogintimV1</string>
+                <string>timapiV1</string>
+            </array>
+        </config-file>
+
+        <!--required frameworks for qq sdk-->
+        <framework src="CoreGraphics.framework" />
+        <framework src="CoreTelephony.framework" />
+        <framework src="SystemConfiguration.framework" />
+        <framework src="Security.framework" />
+        <framework src="libiconv.tbd" />
+        <framework src="libsqlite3.tbd" />
+        <framework src="libstdc++.tbd" />
+        <framework src="libz.tbd" />
+        <!--QQ SDK version 3.2.3-->
+        <framework src="src/ios/TencentOpenAPI.framework" custom="true" framework="true"/>
+        <resource-file src="src/ios/TencentOpenApi_IOS_Bundle.bundle" />
+    </platform>
+</plugin>

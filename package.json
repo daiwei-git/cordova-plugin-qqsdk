@@ -1,0 +1,29 @@
+{
+  "name": "@daiweinpm/cordova-plugin-qqsdk",
+  "version": "1.0.0",
+  "description": "cordova 集成QQ SDK 3.5.11 IOS SDK 3.5.12",
+  "cordova": {
+    "id": "cordova-plugin-qqsdk",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daiwei-git/cordova-plugin-qqsdk.git"
+  },
+  "keywords": [
+    "cordova",
+    "cordova-plugin",
+    "daiwei",
+    "QQ",
+    "QQsdk"
+  ],
+  "author": "daiwei-git",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/daiwei-git/cordova-plugin-qqsdk/issues"
+  },
+  "homepage": "https://github.com/daiwei-git/cordova-plugin-qqsdk#readme"
+}
