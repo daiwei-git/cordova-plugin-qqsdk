@@ -18,7 +18,6 @@ import com.tencent.tauth.DefaultUiListener;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.UiError;
 import com.tencent.tauth.Tencent;
-// import com.tencent.open.GameAppOperation;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -38,56 +37,36 @@ import org.json.JSONObject;
 
 import static org.apache.cordova.CordovaActivity.TAG;
 
-class ShareScene {
-  public static final int QQ = 0;
-  public static final int QQZone = 1;
-  public static final int Favorite = 2;
-}
-
 public class QQSDKPlugin extends CordovaPlugin {
+
   private static Tencent mTencent;
   private CallbackContext currentCallbackContext;
-  private String APP_ID;
-  private static final String QQ_APP_ID = "qq_app_id";
-  private static final String QQ_CANCEL_BY_USER = "cancelled by user";
-  private static final String QQ_RESPONSE_ERROR = "QQ response is error";
-  private static final String QZONE_SHARE_CANCEL = "QZone share is cancelled";
-  private static final String QQFAVORITES_CANCEL = "QQ Favorites is cancelled";
-  private static final String QQ_Client_NOT_INSYALLED_ERROR = "QQ client is not installed";
-  private static final String QQ_PARAM_ERROR = "param incorrect";
 
   @Override protected void pluginInitialize() {
     super.pluginInitialize();
-    APP_ID = webView.getPreferences().getString(QQ_APP_ID, "");
-    mTencent = Tencent.createInstance(APP_ID, this.cordova.getActivity().getApplicationContext());
+    String appid = webView.getPreferences().getString("qq_app_id", "");
+    mTencent = Tencent.createInstance(appid, this.cordova.getActivity().getApplicationContext());
   }
 
   @Override
-  public boolean execute(String action, final CordovaArgs args, final CallbackContext callbackContext)
-      throws JSONException {
+  public boolean execute(String action, final CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
     if (action.equalsIgnoreCase("checkClientInstalled")) {
       return checkClientInstalled(callbackContext);
     }
     if (action.equals("setIsPermissionGranted")) {
-      return setIsPermissionGranted(args);
+      return setIsPermissionGranted(args, callbackContext);
     }
-    if (action.equals("ssoLogin")) {
-      return ssoLogin(callbackContext);
+    if (action.equals("login")) {
+      return login(callbackContext);
     }
     if (action.equals("logout")) {
       return logout(callbackContext);
     }
-    if (action.equals("shareText")) {
-      return shareText(args, callbackContext);
+    if (action.equals("shareToQQ")) {
+      return shareToQQ(args, callbackContext);
     }
-    if (action.equals("shareImage")) {
-      return shareImage(args, callbackContext);
-    }
-    if (action.equals("shareNews")) {
-      return shareNews(args, callbackContext);
-    }
-    if (action.equals("shareAudio")) {
-      return shareAudio(args, callbackContext);
+    if (action.equals("shareToQzone")) {
+      return shareToQzone(args, callbackContext);
     }
     return super.execute(action, args, callbackContext);
   }
@@ -100,7 +79,7 @@ public class QQSDKPlugin extends CordovaPlugin {
     if (installed) {
       callbackContext.success();
     } else {
-      callbackContext.error(QQ_Client_NOT_INSYALLED_ERROR);
+      callbackContext.error("not installed");
     }
     return true;
   }
@@ -108,7 +87,7 @@ public class QQSDKPlugin extends CordovaPlugin {
   /**
    * 设置用户是否已授权获取设备信息
    */
-  private boolean setIsPermissionGranted(CordovaArgs args) {
+  private boolean setIsPermissionGranted(CordovaArgs args, CallbackContext callbackContext) {
     final JSONObject data;
     try {
       data = args.getJSONObject(0);
@@ -117,22 +96,23 @@ public class QQSDKPlugin extends CordovaPlugin {
     } catch (JSONException e) {
 
     }
+    callbackContext.success();
     return true;
   }
 
   /**
    * QQ 单点登录
    */
-  private boolean ssoLogin(CallbackContext callbackContext) {
+  private boolean login(CallbackContext callbackContext) {
     currentCallbackContext = callbackContext;
-      Runnable runnable = new Runnable() {
-        @Override public void run() {
-          mTencent.login(QQSDKPlugin.this.cordova.getActivity(), "all", loginListener);
-        }
-      };
-      this.cordova.getActivity().runOnUiThread(runnable);
-      this.cordova.setActivityResultCallback(this);
-      return true;
+    Runnable runnable = new Runnable() {
+      @Override public void run() {
+        mTencent.login(QQSDKPlugin.this.cordova.getActivity(), "all", loginListener);
+      }
+    };
+    this.cordova.getActivity().runOnUiThread(runnable);
+    this.cordova.setActivityResultCallback(this);
+    return true;
   }
 
   /**
@@ -144,153 +124,41 @@ public class QQSDKPlugin extends CordovaPlugin {
     return true;
   }
 
-  public boolean shareText(CordovaArgs args, CallbackContext callbackContext) {
-    final Bundle params = new Bundle();
-    currentCallbackContext = callbackContext;
+  /**
+   * 分享到QQ
+   */
+  private boolean shareToQQ(CordovaArgs args, CallbackContext callbackContext) {
     final JSONObject data;
     try {
-      data = args.getJSONObject(0);
-      String text = data.has("text")?  data.getString("text"): "";
-      int shareScene = data.has("scene")? data.getInt("scene"): 0;
-      switch (shareScene) {
-        case ShareScene.QQ:
-          callbackContext.error("Android 不支持分享文字到 QQ");
-          break;
-        case ShareScene.Favorite:
-          callbackContext.error("Android 不支持收藏文字到 QQ");
-        //   params.putInt(GameAppOperation.QQFAV_DATALINE_REQTYPE,
-        //       GameAppOperation.QQFAV_DATALINE_TYPE_TEXT);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_TITLE, getAppName());
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_DESCRIPTION, text);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_APPNAME, getAppName());
-        //   Runnable favoritesRunnable = new Runnable() {
-        //     @Override public void run() {
-        //       mTencent.addToQQFavorites(QQSDKPlugin.this.cordova.getActivity(), params,
-        //           addToQQFavoritesListener);
-        //     }
-        //   };
-        //   this.cordova.getActivity().runOnUiThread(favoritesRunnable);
-        //   this.cordova.setActivityResultCallback(this);
-          break;
-        case ShareScene.QQZone:
-          params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE,
-              QzonePublish.PUBLISH_TO_QZONE_TYPE_PUBLISHMOOD);
-          params.putString(QzoneShare.SHARE_TO_QQ_TITLE, text);
-          Runnable zoneRunnable = new Runnable() {
 
-            @Override public void run() {
-              mTencent.publishToQzone(QQSDKPlugin.this.cordova.getActivity(), params,
-                  qZoneShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(zoneRunnable);
-          this.cordova.setActivityResultCallback(this);
-          break;
-        default:
-          break;
-      }
-    } catch (JSONException e) {
-      callbackContext.error(QQ_PARAM_ERROR);
-      return true;
-    }
-    return true;
-  }
-
-  public boolean shareImage(CordovaArgs args, CallbackContext callbackContext) {
-    currentCallbackContext = callbackContext;
-    final JSONObject data;
-    try {
+      currentCallbackContext = callbackContext;
       data = args.getJSONObject(0);
-      String title = data.has("title")?  data.getString("title"): "";
-      String description = data.has("description")?  data.getString("description"): "";
-      String image = data.has("image")?  data.getString("image"): "";
-      int shareScene = data.has("scene")? data.getInt("scene"): 0;
-      image = processImage(image);
+
+      String type = data.has("type") ?  data.getString("type") : "default";
+      String appname = data.has("appname") ?  data.getString("appname") : getAppName();
+      String title = data.has("title") ?  data.getString("title") : "标题";
+      String summary = data.has("summary") ?  data.getString("summary") : "";
+      String arkjson = data.has("arkjson") ?  data.getString("arkjson") : "";
+      String targeturl = data.has("targeturl") ?  data.getString("targeturl") : "";
+      String imageurl = data.has("imageurl") ?  data.getString("imageurl") : "";
+      String audiourl = data.has("audiourl") ?  data.getString("audiourl") : "";
+      String miniprogramappid = data.has("miniprogramappid") ?  data.getString("miniprogramappid") : "";
+      String miniprogrampath = data.has("miniprogrampath") ?  data.getString("miniprogrampath") : "";
+      String miniprogramtype = data.has("miniprogramtype") ?  data.getString("miniprogramtype") : "";
+
       final Bundle params = new Bundle();
-      switch (shareScene) {
-        case ShareScene.QQ:
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);
-          params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, image);
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, description);
-          Runnable qqRunnable = new Runnable() {
 
-            @Override public void run() {
-              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(qqRunnable);
-          this.cordova.setActivityResultCallback(this);
-          break;
-        case ShareScene.Favorite:
-          callbackContext.error("Android 不支持收藏图片到 QQ");
-        //   ArrayList<String> imageUrls = new ArrayList<String>();
-        //   imageUrls.add(image);
-        //   params.putInt(GameAppOperation.QQFAV_DATALINE_REQTYPE,
-        //       GameAppOperation.QQFAV_DATALINE_TYPE_IMAGE_TEXT);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_TITLE, title);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_DESCRIPTION, description);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_IMAGEURL, image);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_APPNAME, getAppName());
-        //   params.putStringArrayList(GameAppOperation.QQFAV_DATALINE_FILEDATA, imageUrls);
-        //   Runnable favoritesRunnable = new Runnable() {
-        //     @Override public void run() {
-        //       mTencent.addToQQFavorites(QQSDKPlugin.this.cordova.getActivity(), params,
-        //           addToQQFavoritesListener);
-        //     }
-        //   };
-        //   this.cordova.getActivity().runOnUiThread(favoritesRunnable);
-        //   this.cordova.setActivityResultCallback(this);
-          break;
-        case ShareScene.QQZone:
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);
-          params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, image);
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, description);
+      if (arkjson) {
+        params.putString(QQShare.SHARE_TO_QQ_ARK_INFO, arkjson);
+      }
+
+      switch (type) {
+        case "image": // 图片
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_TYPE_IMAGE);
+          params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
+          params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
           params.putInt(QQShare.SHARE_TO_QQ_EXT_INT, QQShare.SHARE_TO_QQ_FLAG_QZONE_AUTO_OPEN);
-          Runnable zoneRunnable = new Runnable() {
-
-            @Override public void run() {
-              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(zoneRunnable);
-          this.cordova.setActivityResultCallback(this);
-          break;
-        default:
-          break;
-      }
-    } catch (JSONException e) {
-      callbackContext.error(QQ_PARAM_ERROR);
-      return true;
-    }
-    return true;
-  }
-
-  public boolean shareNews(CordovaArgs args, CallbackContext callbackContext) {
-    currentCallbackContext = callbackContext;
-    final JSONObject data;
-    try {
-      data = args.getJSONObject(0);
-      String title = data.has("title")?  data.getString("title"): "";
-      String description = data.has("description")?  data.getString("description"): "";
-      String image = data.has("image")?  data.getString("image"): "";
-      String url = data.has("url")?  data.getString("url"): "";
-      int shareScene = data.has("scene")? data.getInt("scene"): 0;
-      final Bundle params = new Bundle();
-      switch (shareScene) {
-        case ShareScene.QQ:
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
-          if(URLUtil.isHttpUrl(image) || URLUtil.isHttpsUrl(image)) {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL,image);
-          } else {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL,processImage(image));
-          }
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, url);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, description);
           Runnable qqRunnable = new Runnable() {
-
             @Override public void run() {
               mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
             }
@@ -298,81 +166,19 @@ public class QQSDKPlugin extends CordovaPlugin {
           this.cordova.getActivity().runOnUiThread(qqRunnable);
           this.cordova.setActivityResultCallback(this);
           break;
-        case ShareScene.Favorite:
-          callbackContext.error("Android 不支持收藏news到 QQ");
-        //   image = processImage(image);
-        //   params.putInt(GameAppOperation.QQFAV_DATALINE_REQTYPE,
-        //       GameAppOperation.QQFAV_DATALINE_TYPE_DEFAULT);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_TITLE, title);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_DESCRIPTION, description);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_IMAGEURL, image);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_URL, url);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_APPNAME, getAppName());
-        //   Runnable favoritesRunnable = new Runnable() {
-        //     @Override public void run() {
-        //       mTencent.addToQQFavorites(QQSDKPlugin.this.cordova.getActivity(), params,
-        //           addToQQFavoritesListener);
-        //     }
-        //   };
-        //   this.cordova.getActivity().runOnUiThread(favoritesRunnable);
-        //   this.cordova.setActivityResultCallback(this);
-          break;
-        case ShareScene.QQZone:
-          image = processImage(image);
-          ArrayList<String> imageUrls = new ArrayList<String>();
-          imageUrls.add(image);
-          params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE,
-              QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
-          params.putString(QzoneShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, description);
-          params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL, url);
-          params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
-          Runnable zoneRunnable = new Runnable() {
-
-            @Override public void run() {
-              mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params,
-                  qZoneShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(zoneRunnable);
-          this.cordova.setActivityResultCallback(this);
-          break;
-        default:
-          break;
-      }
-    } catch (JSONException e) {
-      callbackContext.error(QQ_PARAM_ERROR);
-      return true;
-    }
-    return true;
-  }
-
-  public boolean shareAudio(CordovaArgs args, CallbackContext callbackContext) {
-    currentCallbackContext = callbackContext;
-    final JSONObject data;
-    try {
-      data = args.getJSONObject(0);
-      String title = data.has("title")?  data.getString("title"): "";
-      String description = data.has("description")?  data.getString("description"): "";
-      String image = data.has("image")?  data.getString("image"): "";
-      String url = data.has("url")?  data.getString("url"): "";
-      String flashUrl = data.has("flashUrl")?  data.getString("flashUrl"): "";
-      int shareScene = data.has("scene")? data.getInt("scene"): 0;
-      final Bundle params = new Bundle();
-      switch (shareScene) {
-        case ShareScene.QQ:
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
-          if(URLUtil.isHttpUrl(image) || URLUtil.isHttpsUrl(image)) {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL,image);
-          } else {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL,processImage(image));
-          }
-          params.putString(QQShare.SHARE_TO_QQ_AUDIO_URL, flashUrl);
+        case "audio": // 音乐
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_TYPE_AUDIO);
+          params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
           params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, url);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, description);
+          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
+          if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
+            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+          } else {
+            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
+          }
+          params.putString(QQShare.SHARE_TO_QQ_AUDIO_URL, audiourl);
           Runnable qqRunnable = new Runnable() {
-
             @Override public void run() {
               mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
             }
@@ -380,53 +186,134 @@ public class QQSDKPlugin extends CordovaPlugin {
           this.cordova.getActivity().runOnUiThread(qqRunnable);
           this.cordova.setActivityResultCallback(this);
           break;
-        case ShareScene.Favorite:
-          callbackContext.error("Android 不支持收藏媒体到 QQ");
-        //   image = processImage(image);
-        //   params.putInt(GameAppOperation.QQFAV_DATALINE_REQTYPE,
-        //       GameAppOperation.QQFAV_DATALINE_TYPE_DEFAULT);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_TITLE, title);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_DESCRIPTION, description);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_IMAGEURL, image);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_URL, url);
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_APPNAME, getAppName());
-        //   params.putString(GameAppOperation.QQFAV_DATALINE_AUDIOURL, flashUrl);
-        //   Runnable favoritesRunnable = new Runnable() {
-        //     @Override public void run() {
-        //       mTencent.addToQQFavorites(QQSDKPlugin.this.cordova.getActivity(), params,
-        //           addToQQFavoritesListener);
-        //     }
-        //   };
-        //   this.cordova.getActivity().runOnUiThread(favoritesRunnable);
-        //   this.cordova.setActivityResultCallback(this);
-          break;
-        case ShareScene.QQZone:
-          image = processImage(image);
-          ArrayList<String> imageUrls = new ArrayList<String>();
-          imageUrls.add(image);
-          params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE,
-              QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
-          params.putString(QzoneShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, description);
-          params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL, url);
-          params.putString(QzoneShare.SHARE_TO_QQ_AUDIO_URL, flashUrl);
-          params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
-          Runnable zoneRunnable = new Runnable() {
-
+        case "miniprogram": // 小程序
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_MINI_PROGRAM);
+          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
+          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
+          if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
+            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+          } else {
+            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
+          }
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_APPID, miniprogramappid);
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_PATH, miniprogrampath);
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_TYPE, miniprogramtype);
+          Runnable qqRunnable = new Runnable() {
             @Override public void run() {
-              mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params,
-                  qZoneShareListener);
+              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
+            }
+          };
+          this.cordova.getActivity().runOnUiThread(qqRunnable);
+          this.cordova.setActivityResultCallback(this);
+          break;
+        default: // 默认图文
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_TYPE_DEFAULT);
+          params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
+          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
+          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
+          if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
+            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+          } else {
+            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
+          }
+          Runnable qqRunnable = new Runnable() {
+            @Override public void run() {
+              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
+            }
+          };
+          this.cordova.getActivity().runOnUiThread(qqRunnable);
+          this.cordova.setActivityResultCallback(this);
+          break;
+      }
+    } catch (JSONException e) {
+      callbackContext.error(e.getMessage());
+    }
+    return true;
+  }
+
+  /**
+   * 分享到QQ空间
+   */
+  private boolean shareToQzone(CordovaArgs args, CallbackContext callbackContext) {
+    final JSONObject data;
+    try {
+
+      currentCallbackContext = callbackContext;
+      data = args.getJSONObject(0);
+
+      String type = data.has("type") ?  data.getString("type") : "default";
+      String title = data.has("title") ?  data.getString("title") : "标题";
+      String summary = data.has("summary") ?  data.getString("summary") : "摘要";
+      String targeturl = data.has("targeturl") ?  data.getString("targeturl") : "";
+      String imageurl = data.has("imageurl") ?  data.getString("imageurl") : "";
+      String audiourl = data.has("audiourl") ?  data.getString("audiourl") : "";
+      String extrascene = data.has("extrascene") ?  data.getString("extrascene") : "";
+      String callback = data.has("callback") ?  data.getString("callback") : "";
+      String miniprogramappid = data.has("miniprogramappid") ?  data.getString("miniprogramappid") : "";
+      String miniprogrampath = data.has("miniprogrampath") ?  data.getString("miniprogrampath") : "";
+      String miniprogramtype = data.has("miniprogramtype") ?  data.getString("miniprogramtype") : "";
+
+      final Bundle params = new Bundle();
+
+      int ttype = Tencent.SHARE_TO_QQ_TYPE_DEFAULT;
+      switch (type) {
+        case "publish": // 发表说说
+          ArrayList<String> imageUrls = new ArrayList<String>();
+          imageUrls.add(processImage(imageurl));
+          params.putString(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.PUBLISH_TO_QZONE_TYPE_PUBLISHMOOD);
+          params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, summary);
+          params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
+          params.putString(QzonePublish.PUBLISH_TO_QZONE_VIDEO_PATH, audiourl);
+          Bundle extParams = new Bundle();
+          extParams.putString(QzonePublish.HULIAN_EXTRA_SCENE, extrascene);
+          extParams.putString(QzonePublish.HULIAN_CALL_BACK, callback);
+          params.putBundle(QzonePublish.PUBLISH_TO_QZONE_EXTMAP, extParams);
+          Runnable zoneRunnable = new Runnable() {
+            @Override public void run() {
+              mTencent.publishToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
             }
           };
           this.cordova.getActivity().runOnUiThread(zoneRunnable);
           this.cordova.setActivityResultCallback(this);
           break;
-        default:
+        case "miniprogram": // 小程序
+          ArrayList<String> imageUrls = new ArrayList<String>();
+          imageUrls.add(processImage(imageurl));
+          params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_MINI_PROGRAM);
+          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
+          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
+          params.putStringArrayList(QQShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_APPID, miniprogramappid);
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_PATH, miniprogrampath);
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_TYPE, miniprogramtype);
+          Runnable zoneRunnable = new Runnable() {
+            @Override public void run() {
+              mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
+            }
+          };
+          this.cordova.getActivity().runOnUiThread(zoneRunnable);
+          this.cordova.setActivityResultCallback(this);
+          break;
+        default: // 默认图文
+          params.putString(QzoneShare.SHARE_TO_QQ_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
+          params.putString(QzoneShare.SHARE_TO_QQ_TITLE, title);//必填
+          params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, summary);//选填
+          params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL, targeturl);//必填
+          params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+          Runnable zoneRunnable = new Runnable() {
+            @Override public void run() {
+              mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
+            }
+          };
+          this.cordova.getActivity().runOnUiThread(zoneRunnable);
+          this.cordova.setActivityResultCallback(this);
           break;
       }
     } catch (JSONException e) {
-      callbackContext.error(QQ_PARAM_ERROR);
-      return true;
+      callbackContext.error(e.getMessage());
     }
     return true;
   }
@@ -500,7 +387,6 @@ public class QQSDKPlugin extends CordovaPlugin {
     }
   }
 
-
   public static Bitmap getBitmapFromURL(String src) {
     try {
       URL url = new URL(src);
@@ -569,14 +455,14 @@ public class QQSDKPlugin extends CordovaPlugin {
     @Override public void onComplete(Object response) {
       if (null == response) {
         QQSDKPlugin.this.webView.sendPluginResult(
-            new PluginResult(PluginResult.Status.ERROR, QQ_RESPONSE_ERROR),
+            new PluginResult(PluginResult.Status.ERROR, "response error"),
             currentCallbackContext.getCallbackId());
         return;
       }
       JSONObject jsonResponse = (JSONObject) response;
       if (null != jsonResponse && jsonResponse.length() == 0) {
         QQSDKPlugin.this.webView.sendPluginResult(
-            new PluginResult(PluginResult.Status.ERROR, QQ_RESPONSE_ERROR),
+            new PluginResult(PluginResult.Status.ERROR, "response error"),
             currentCallbackContext.getCallbackId());
         return;
       }
@@ -595,17 +481,18 @@ public class QQSDKPlugin extends CordovaPlugin {
 
     @Override public void onCancel() {
       QQSDKPlugin.this.webView.sendPluginResult(
-          new PluginResult(PluginResult.Status.ERROR, QQ_CANCEL_BY_USER),
+          new PluginResult(PluginResult.Status.ERROR, "cancelled"),
           currentCallbackContext.getCallbackId());
     }
   };
+
   /**
    * QQ分享监听
    */
   IUiListener qqShareListener = new DefaultUiListener() {
     @Override public void onCancel() {
       QQSDKPlugin.this.webView.sendPluginResult(
-          new PluginResult(PluginResult.Status.ERROR, QQ_CANCEL_BY_USER),
+          new PluginResult(PluginResult.Status.ERROR, "cancelled"),
           currentCallbackContext.getCallbackId());
     }
 
@@ -620,6 +507,7 @@ public class QQSDKPlugin extends CordovaPlugin {
           currentCallbackContext.getCallbackId());
     }
   };
+
   /**
    * QQZONE 分享监听
    */
@@ -627,7 +515,7 @@ public class QQSDKPlugin extends CordovaPlugin {
 
     @Override public void onCancel() {
       QQSDKPlugin.this.webView.sendPluginResult(
-          new PluginResult(PluginResult.Status.ERROR, QZONE_SHARE_CANCEL),
+          new PluginResult(PluginResult.Status.ERROR, "cancelled"),
           currentCallbackContext.getCallbackId());
     }
 
@@ -639,27 +527,6 @@ public class QQSDKPlugin extends CordovaPlugin {
 
     @Override public void onComplete(Object response) {
       QQSDKPlugin.this.webView.sendPluginResult(new PluginResult(PluginResult.Status.OK),
-          currentCallbackContext.getCallbackId());
-    }
-  };
-  /**
-   * 添加到QQ收藏监听
-   */
-  IUiListener addToQQFavoritesListener = new DefaultUiListener() {
-    @Override public void onCancel() {
-      QQSDKPlugin.this.webView.sendPluginResult(
-          new PluginResult(PluginResult.Status.ERROR, QQFAVORITES_CANCEL),
-          currentCallbackContext.getCallbackId());
-    }
-
-    @Override public void onComplete(Object response) {
-      QQSDKPlugin.this.webView.sendPluginResult(new PluginResult(PluginResult.Status.OK),
-          currentCallbackContext.getCallbackId());
-    }
-
-    @Override public void onError(UiError e) {
-      QQSDKPlugin.this.webView.sendPluginResult(
-          new PluginResult(PluginResult.Status.ERROR, e.errorMessage),
           currentCallbackContext.getCallbackId());
     }
   };
@@ -688,9 +555,6 @@ public class QQSDKPlugin extends CordovaPlugin {
       }
       if (requestCode == Constants.REQUEST_QQ_SHARE) {
         Tencent.onActivityResultData(requestCode, resultCode, intent, qqShareListener);
-      }
-      if (requestCode == Constants.REQUEST_QQ_FAVORITES) {
-        Tencent.onActivityResultData(requestCode, resultCode, intent, addToQQFavoritesListener);
       }
     }
     super.onActivityResult(requestCode, resultCode, intent);

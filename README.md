@@ -1,18 +1,18 @@
-# cordova-plugin-umeng
+# @daiweinpm/cordova-plugin-qqsdk
 
-cordova 集成友盟统计安卓SDK 9.4+ IOS SDK 7.3+
+QQ安卓SDK 3.5.12 IOS SDK 3.5.11
 
 # 新版说明
-新增友盟自动化测试SDK，友盟性能检测SDK，由于隐私政策原因，默认自动收集已改为手动收集，请在适当的时候使用init函数初始化
+集成QQSDK
 
 # 安装
 
 ```shell
-npm i @daiweinpm/cordova-plugin-umeng
+npm i @daiweinpm/cordova-plugin-qqsdk
 ```
 
 ```shell
-cordova plugin add @daiweinpm/cordova-plugin-umeng
+cordova plugin add @daiweinpm/cordova-plugin-qqsdk --variable QQ_APP_ID=YOUR_QQ_APPID
 ```
 
 ```shell
@@ -24,94 +24,66 @@ cordova build android
 ```Javascript
 
 /**
- * 请在代码中引入这一句 或者从window中使用 window.Umeng，
+ * 请在代码中引入这一句 或者从window中使用 window.QQSDK
  */
-declare const Umeng;
+declare const QQSDK;
 
 /**
  * 插件安装失败时此对象可能无法使用 所以需要加入判断
  */
-if (Umeng) {
+if (QQSDK) {
     /**
-    * 注意: 即使您已经在AndroidManifest.xml中配置过appkey和channel值，也需要在App代码中调
-    * 用初始化接口（如需要使用AndroidManifest.xml中配置好的appkey和channel值，
-    * init调用中appkey和channel参数请置为null，IOS 的参数 deviceType 和 pushSecret 暂不生效。
-    * appKey 友盟appkey
-    * channelId 渠道ID
-    * deviceType 设备类型，1 为手机、2 为盒子，默认为手机
-    * pushSecret 推送密钥 Push 推送业务的secret
+    * 检查QQ是否安装
     */
-    Umeng.init(appKey, channelId, deviceType, pushSecret);
+    QQSDK.checkInstalled(): Promise;
 
     /**
-     * eventId 统计微博应用中”转发”事件发生的次数，那么在转发的函数里调用
-     */
-    Umeng.onEvent(eventId);
-    
-    /**
-     * eventId 统计微博应用中”转发”事件发生的次数，那么在转发的函数里调用
-     * label 不同的标签会分别进行统计，方便同一事件的不同标签的对比,为nil或空字符串时后台会生成和eventId同的标签。
-     */
-    Umeng.onEventWithLabel(eventId, label);
+    * 在调用其他SDK接口前调用该接口通知 SDK 用户是否已授权应用获取设备信息的权限，或在应用的取消授权界面中提供用户撤销获取设备信息的权限
+    * 
+    * 布尔 isPermission 
+    */
+    QQSDK.setIsPermissionGranted(isPermission): Promise;
 
     /**
-     * eventId 统计微博应用中”转发”事件发生的次数，那么在转发的函数里调用
-     * attributes 属性中的key－value必须为String类型, 每个应用至多添加500个自定义事件，key不能超过100个 
-     */
-    Umeng.onEventWithParameters(eventId, attributes);
+    * QQ授权登录
+    */
+    QQSDK.login(): Promise;
 
     /**
-     * eventId 统计微博应用中”转发”事件发生的次数，那么在转发的函数里调用
-     * attributes 属性中的key－value必须为String类型, 每个应用至多添加500个自定义事件，key不能超过100个
-     * counter 自定义数值
-     */
-    Umeng.onEventWithCounter(eventId, attributes, counter);
+    * QQ退出登录
+    */
+    QQSDK.logout(): Promise;
 
     /**
-     * 必须配对调用onPageBegin:和onPageEnd:两个函数来完成自动统计，若只调用某一个函数不会生成有效数据；
-     * 在该页面展示时调用onPageBegin:，当退出该页面时调用onPageEnd。
-     */
-    Umeng.onPageBegin(Pagename);
+    * 分享到QQ
+    * 
+    * params.type  image: 分享纯图片，audio：分享音乐，miniprogram：分享到小程序，default：分享图文消息
+    * params.title 标题（type为image不生效）
+    * params.summary 摘要（type为image不生效）
+    * params.arkjson 
+    * params.targeturl 目标地址（type为image不生效）
+    * params.imageurl 图片地址（type为image不生效）
+    * params.audiourl 音乐地址（type为image不生效）
+    * params.miniprogramappid type为miniprogram时生效，小程序ID
+    * params.miniprogrampath type为miniprogram时生效，小程序路径
+    * params.miniprogramtype type为miniprogram时生效，小程序类型：默认正式版（3），可选测试版（1）、预览版（4）
+    */
+    QQSDK.shareToQQ(params: {}): Promise;
+
 
     /**
-     * 必须配对调用beginLogPageView:和onPageEnd:两个函数来完成自动统计，若只调用某一个函数不会生成有效数据；
-     * 在该页面展示时调用beginLogPageView:，当退出该页面时调用onPageEnd。
-     */
-    Umeng.onPageEnd(Pagename);
-
-    /**
-     * 获取设备ID
-     * callBack 回调函数
-     */
-    Umeng.getDeviceId(callBack);
-
-    /**
-     * 获取设备信息
-     * callBack 回调函数
-     */
-    Umeng.getDeviceInfo(callBack);
-
-    /**
-     * 【友盟+】在统计用户时以设备为标准，如果需要统计应用自身的账号，可以使用此功能
-     * UserID 用户ID
-     */
-    Umeng.profileSignInWithPUID(UserID);
-
-    /**
-     * 【友盟+】在统计用户时以设备为标准，如果需要统计应用自身的账号，可以使用此功能
-     * UserID 用户ID
-     * provider 不能以下划线”_”开头，使用大写字母和数字标识; 如果是上市公司，建议使用股票代码。
-     */
-    Umeng.profileSignInWithPUIDWithProvider(UserID, provider);
-
-    /**
-     * Signoff调用后，不再发送账号内容
-     */
-    Umeng.profileSignOff(); 
-
-    /**
-     * 打开统计SDK调试模式
-     */
-    Umeng.setLogEnabled(true); 
+    * 分享到QQ空间
+    * 
+    * params.type  publish: 发布说说，miniprogram：分享到小程序，default：分享图文消息
+    * params.title 标题
+    * params.summary 摘要
+    * params.targeturl 目标地址
+    * params.imageurl 图片地址
+    * params.audiourl 音乐地址
+    * params.miniprogramappid type为miniprogram时生效，小程序ID
+    * params.miniprogrampath type为miniprogram时生效，小程序路径
+    * params.miniprogramtype type为miniprogram时生效，小程序类型：默认正式版（3），可选测试版（1）、预览版（4）
+    */
+    QQSDK.shareToQzone(params: {}): Promise;
 }
 ```

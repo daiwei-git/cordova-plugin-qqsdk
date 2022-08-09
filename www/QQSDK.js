@@ -1,45 +1,95 @@
 
 var cordova = require('cordova');
 module.exports = {
-	Scene: {
-        QQ:  0, // QQ 好友
-        QQZone: 1, // QQ 空间
-        Favorite: 2  // 收藏
-    },
-    ClientType: {
-        QQ:  0, // QQ 手机客户端
-        TIM: 1 // TIM 客户端
-    },
-    setIsPermissionGranted:function(isPermissionGranted) {
-        cordova.exec(null, null, "QQSDK", "setIsPermissionGranted", [{
-            isPermissionGranted: isPermissionGranted
-        }]);
+	/**
+	 * 检查QQ客户端是否安装
+	 * 
+	 * @param {*} isPermissionGranted 
+	 */
+	checkInstalled: function() {
+		return new Promise(function(resolve, reject) {
+			cordova.exec((res) => {
+				resolve(res);
+			  }, (res) => {
+				reject(res);
+			  }, "QQSDK", "checkClientInstalled", []);
+		});
 	},
-	ssoLogin:function(successCallback, errorCallback, args){
-		if(args === undefined) {
-            args = {}
-        }
-		cordova.exec(successCallback, errorCallback, "QQSDK", "ssoLogin", [args]);
-    },
-	logout:function(successCallback, errorCallback){
-		cordova.exec(successCallback, errorCallback, "QQSDK", "logout", []);
+	
+	/**
+	 * 在调用其他SDK接口前调用该接口通知 SDK 用户是否已授权应用获取设备信息的权限，或在应用的取消授权界面中提供用户撤销获取设备信息的权限
+	 * 
+	 * @param {*} isPermissionGranted 
+	 */
+    setIsPermissionGranted: function(isPermissionGranted) {
+		return new Promise(function(resolve, reject) {
+			cordova.exec((res) => {
+				resolve(res);
+			  }, (res) => {
+				reject(res);
+			  }, "QQSDK", "setIsPermissionGranted", [{
+				isPermissionGranted: isPermissionGranted
+			}]);
+		});
 	},
-	checkClientInstalled:function(successCallback, errorCallback, args){
-		if(args === undefined) {
-            args = {}
-        }
-		cordova.exec(successCallback, errorCallback, "QQSDK", "checkClientInstalled", [args]);
+
+	/**
+	 * 调起QQ登录
+	 */
+	login: function() {
+		return new Promise(function(resolve, reject) {
+			cordova.exec((res) => {
+				resolve(res);
+			  }, (res) => {
+				reject(res);
+			  }, "QQSDK", "login", []);
+		});
 	},
-	shareText:function(successCallback, errorCallback, args){
-		cordova.exec(successCallback, errorCallback, "QQSDK", "shareText", [args]);
+	
+	/**
+	 * 退出QQ登录
+	 */
+	logout: function() {
+		return new Promise(function(resolve, reject) {
+			cordova.exec((res) => {
+				resolve(res);
+			  }, (res) => {
+				reject(res);
+			  }, "QQSDK", "logout", []);
+		});
 	},
-	shareImage:function(successCallback, errorCallback, args){
-		cordova.exec(successCallback, errorCallback, "QQSDK", "shareImage", [args]);
+
+	/**
+	 * 分享到QQ
+	 * @param {object} params 
+	 */
+	shareToQQ: function(params) {
+		return new Promise(function(resolve, reject) {
+			if(params === undefined) {
+				params = {}
+			}
+			cordova.exec((res) => {
+				resolve(res);
+			  }, (res) => {
+				reject(res);
+			  }, "QQSDK", "shareToQQ", [params]);
+		});
 	},
-	shareNews:function(successCallback, errorCallback, args){
-		cordova.exec(successCallback, errorCallback, "QQSDK", "shareNews", [args]);
-	},
-	shareAudio:function(successCallback, errorCallback, args){
-		cordova.exec(successCallback, errorCallback, "QQSDK", "shareAudio", [args]);
+
+	/**
+	 * 分享到QQ空间
+	 * @param {object} params 
+	 */
+	shareToQzone: function(params) {
+		return new Promise(function(resolve, reject) {
+			if(params === undefined) {
+				params = {}
+			}
+			cordova.exec((res) => {
+				resolve(res);
+			  }, (res) => {
+				reject(res);
+			  }, "QQSDK", "shareToQzone", [params]);
+		});
 	},
 };
