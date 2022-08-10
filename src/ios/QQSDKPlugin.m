@@ -156,12 +156,19 @@ NSString *appId = @"";
         NSString *targeturl = [args objectForKey:@"targeturl"];
         NSString *imageurl = [args objectForKey:@"imageurl"];
         NSString *audiourl = [args objectForKey:@"audiourl"];
+        NSString *videourl = [args objectForKey:@"videourl"];
         NSString *miniprogramappid = [args objectForKey:@"miniprogramappid"];
         NSString *miniprogrampath = [args objectForKey:@"miniprogrampath"];
         NSString *miniprogramtype = [args objectForKey:@"miniprogramtype"];
 
         switch (type) {
-            case @"image": // 图片
+            case @"text": // 纯文本
+                QQApiTextObject *txtObj = [QQApiTextObject objectWithText: title];
+                SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:txtObj];
+                qqQQApiSendResultCode sent = [QQApiInterface sendReq:req];
+                [self handleSendResult:sent];
+                break;
+            case @"image": // 纯图片
                 NSData *imgData = [self processImage: imageurl];
                 QQApiImageObject *imgObj = [QQApiImageObject objectWithData:imgData previewImageData: imgData title: title description: summary];
                 SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:imgObj];
@@ -176,6 +183,14 @@ NSString *appId = @"";
                 qqQQApiSendResultCode sent = [QQApiInterface sendReq:req];
                 [self handleSendResult:sent];
                 break;
+            // case @"video": // 视频
+            //     NSData *imgData = [self processImage: imageurl];
+            //     QQApiVideoObject *videoObj =[QQApiVideoObject objectWithURL :[NSURL URLWithString:audiourl] title: title description: summary previewImageData: imgData];
+            //     [videoObj setFlashUrl:videourl];
+            //     SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:videoObj]
+            //     qqQQApiSendResultCode sent = [QQApiInterface sendReq:req];
+            //     [self handleSendResult:sent];
+            //     break;
             case @"miniprogram": // 小程序
                 NSData *imageData = [self processImage: imageurl];
                 QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:utf8String] title: title description: summary previewImageData: imageData];
@@ -189,6 +204,7 @@ NSString *appId = @"";
                 QQApiSendResultCode ret = [QQApiInterface sendReq:req];
                 [self handleSendResult:sent];
                 break;
+            case @"news": // 新闻
             default: // 默认图文 = 新闻
                 NSData *imageData = [self processImage: imageurl];
                 QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:utf8String] title: title description: summary previewImageData: imageData];
@@ -220,28 +236,30 @@ NSString *appId = @"";
         NSString *targeturl = [args objectForKey:@"targeturl"];
         NSString *imageurl = [args objectForKey:@"imageurl"];
         NSString *audiourl = [args objectForKey:@"audiourl"];
+        NSString *videourl = [args objectForKey:@"videourl"];
         NSString *miniprogramappid = [args objectForKey:@"miniprogramappid"];
         NSString *miniprogrampath = [args objectForKey:@"miniprogrampath"];
         NSString *miniprogramtype = [args objectForKey:@"miniprogramtype"];
 
         switch (type) {
-            case @"image": // 图片
-                NSData *imgData = [self processImage: imageurl];
-                QQApiImageObject *imgObj = [QQApiImageObject objectWithData:imgData previewImageData: imgData title: title description: summary];
-                imgObj.cflag |= kQQAPICtrlFlagQZoneShareOnStart;
-                SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:imgObj];
-                qqQQApiSendResultCode sent = [QQApiInterface sendReqToQZone:req];
-                [self handleSendResult:sent];
-                break;
-            case @"audio": // 音乐
-                NSData *imgData = [self processImage: imageurl];
-                QQApiAudioObject *audioObj =[QQApiAudioObject objectWithURL :[NSURL URLWithString:audiourl] title: title description: summary previewImageData: imgData];
-                [audioObj setFlashUrl:audiourl];
-                audioObj.cflag |= kQQAPICtrlFlagQZoneShareOnStart;
-                SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:audioObj]
-                qqQQApiSendResultCode sent = [QQApiInterface sendReqToQZone:req];
-                [self handleSendResult:sent];
-                break;
+            // case @"audio": // 音乐
+            //     NSData *imgData = [self processImage: imageurl];
+            //     QQApiAudioObject *audioObj =[QQApiAudioObject objectWithURL :[NSURL URLWithString:audiourl] title: title description: summary previewImageData: imgData];
+            //     [audioObj setFlashUrl:audiourl];
+            //     audioObj.cflag |= kQQAPICtrlFlagQZoneShareOnStart;
+            //     SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:audioObj]
+            //     qqQQApiSendResultCode sent = [QQApiInterface sendReqToQZone:req];
+            //     [self handleSendResult:sent];
+            //     break;
+            // case @"video": // 视频
+            //     NSData *imgData = [self processImage: imageurl];
+            //     QQApiVideoObject *vidoeObj =[QQApiVideoObject objectWithURL :[NSURL URLWithString:audiourl] title: title description: summary previewImageData: imgData];
+            //     [vidoeObj setFlashUrl:videourl];
+            //     vidoeObj.cflag |= kQQAPICtrlFlagQZoneShareOnStart;
+            //     SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:vidoeObj]
+            //     qqQQApiSendResultCode sent = [QQApiInterface sendReqToQZone:req];
+            //     [self handleSendResult:sent];
+            //     break;
             case @"miniprogram": // 小程序
                 NSData *imageData = [self processImage: imageurl];
                 QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:utf8String] title: title description: summary previewImageData: imageData];
@@ -257,6 +275,7 @@ NSString *appId = @"";
                 QQApiSendResultCode ret = [QQApiInterface sendReqToQZone:req];
                 [self handleSendResult:sent];
                 break;
+            case @"news": // 新闻
             default: // 默认图文 = 新闻
                 NSData *imageData = [self processImage: imageurl];
                 QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:utf8String] title: title description: summary previewImageData: imageData];

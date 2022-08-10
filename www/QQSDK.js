@@ -6,13 +6,18 @@ module.exports = {
 	 * 
 	 * @param {*} isPermissionGranted 
 	 */
-	checkInstalled: function() {
+	checkClientInstalled: function(client) {
 		return new Promise(function(resolve, reject) {
+			if (client == undefined) {
+				client = 0;
+			}
 			cordova.exec((res) => {
 				resolve(res);
 			  }, (res) => {
 				reject(res);
-			  }, "QQSDK", "checkClientInstalled", []);
+			  }, "QQSDK", "checkClientInstalled", [{
+					client: client
+				}]);
 		});
 	},
 	
@@ -21,7 +26,7 @@ module.exports = {
 	 * 
 	 * @param {*} isPermissionGranted 
 	 */
-    setIsPermissionGranted: function(isPermissionGranted) {
+  setIsPermissionGranted: function(isPermissionGranted) {
 		return new Promise(function(resolve, reject) {
 			cordova.exec((res) => {
 				resolve(res);

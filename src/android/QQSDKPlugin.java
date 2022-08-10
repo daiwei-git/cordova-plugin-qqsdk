@@ -128,9 +128,8 @@ public class QQSDKPlugin extends CordovaPlugin {
    * 分享到QQ
    */
   private boolean shareToQQ(CordovaArgs args, CallbackContext callbackContext) {
-    final JSONObject data;
     try {
-
+      final JSONObject data;
       currentCallbackContext = callbackContext;
       data = args.getJSONObject(0);
 
@@ -142,91 +141,105 @@ public class QQSDKPlugin extends CordovaPlugin {
       String targeturl = data.has("targeturl") ?  data.getString("targeturl") : "";
       String imageurl = data.has("imageurl") ?  data.getString("imageurl") : "";
       String audiourl = data.has("audiourl") ?  data.getString("audiourl") : "";
+      String videourl = data.has("videourl") ?  data.getString("videourl") : "";
       String miniprogramappid = data.has("miniprogramappid") ?  data.getString("miniprogramappid") : "";
       String miniprogrampath = data.has("miniprogrampath") ?  data.getString("miniprogrampath") : "";
-      String miniprogramtype = data.has("miniprogramtype") ?  data.getString("miniprogramtype") : "";
+      String miniprogramtype = data.has("miniprogramtype") ?  data.getString("miniprogramtype") : "3";
 
       final Bundle params = new Bundle();
 
-      if (arkjson) {
+      if (arkjson.length() > 0) {
         params.putString(QQShare.SHARE_TO_QQ_ARK_INFO, arkjson);
       }
 
       switch (type) {
-        case "image": // 图片
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_TYPE_IMAGE);
+        case "image": // 纯图片
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_IMAGE);
           params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
-          params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
-          params.putInt(QQShare.SHARE_TO_QQ_EXT_INT, QQShare.SHARE_TO_QQ_FLAG_QZONE_AUTO_OPEN);
-          Runnable qqRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(qqRunnable);
-          this.cordova.setActivityResultCallback(this);
+          params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl)); // 必填
+          // params.putInt(QQShare.SHARE_TO_QQ_EXT_INT, QQShare.SHARE_TO_QQ_FLAG_QZONE_AUTO_OPEN);
           break;
         case "audio": // 音乐
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_TYPE_AUDIO);
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_AUDIO);
           params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
-          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
-          if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
-          } else {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
+          params.putString(QQShare.SHARE_TO_QQ_TITLE, title); // 必填
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl); // 必填
+          params.putString(QQShare.SHARE_TO_QQ_AUDIO_URL, audiourl); // 必填
+          // 摘要可选
+          if (summary.length() > 0) {
+            params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
           }
-          params.putString(QQShare.SHARE_TO_QQ_AUDIO_URL, audiourl);
-          Runnable qqRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
+          // 图片可选
+          if (imageurl.length() > 0) {
+            if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
+              params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+            } else {
+              params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
             }
-          };
-          this.cordova.getActivity().runOnUiThread(qqRunnable);
-          this.cordova.setActivityResultCallback(this);
+          }
           break;
+        // case "video": // 视频
+        //   params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_VIDEO);
+        //   params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
+        //   params.putString(QQShare.SHARE_TO_QQ_TITLE, title); // 必填
+        //   params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl); // 必填
+        //   params.putString(QQShare.SHARE_TO_QQ_VIDEO_URL, videourl); // 必填
+        //   // 摘要可选
+        //   if (summary.length() > 0) {
+        //     params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
+        //   }
+        //   // 图片可选
+        //   if (imageurl.length() > 0) {
+        //     if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
+        //       params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+        //     } else {
+        //       params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
+        //     }
+        //   }
+        //   break;
         case "miniprogram": // 小程序
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_MINI_PROGRAM);
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
-          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_MINI_PROGRAM);
+          params.putString(QQShare.SHARE_TO_QQ_TITLE, title); // 必填
+          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary); // 必填
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl); // 必填
+          // 必填
           if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
             params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
           } else {
             params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
           }
-          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_APPID, miniprogramappid);
-          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_PATH, miniprogrampath);
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_APPID, miniprogramappid); // 必填
+          params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_PATH, miniprogrampath); // 必填
           params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_TYPE, miniprogramtype);
-          Runnable qqRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(qqRunnable);
-          this.cordova.setActivityResultCallback(this);
           break;
+        case "text": // 纯文本
+        case "news": // 新闻
         default: // 默认图文
-          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, Tencent.SHARE_TO_QQ_TYPE_DEFAULT);
-          params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname);
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
-          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
-          if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
-          } else {
-            params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
+          params.putInt(QQShare.SHARE_TO_QQ_KEY_TYPE, QQShare.SHARE_TO_QQ_TYPE_DEFAULT);
+          params.putString(QQShare.SHARE_TO_QQ_APP_NAME, appname); // 可选
+          params.putString(QQShare.SHARE_TO_QQ_TITLE, title); // 必填
+          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl); // 必填
+          // 摘要可选
+          if (summary.length() > 0) {
+            params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
           }
-          Runnable qqRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
+          // 图片可选
+          if (imageurl.length() > 0) {
+            if(URLUtil.isHttpUrl(imageurl) || URLUtil.isHttpsUrl(imageurl)) {
+              params.putString(QQShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
+            } else {
+              params.putString(QQShare.SHARE_TO_QQ_IMAGE_LOCAL_URL, processImage(imageurl));
             }
-          };
-          this.cordova.getActivity().runOnUiThread(qqRunnable);
-          this.cordova.setActivityResultCallback(this);
+          }
           break;
       }
+      Runnable qqRunnable = new Runnable() {
+        @Override public void run() {
+          mTencent.shareToQQ(QQSDKPlugin.this.cordova.getActivity(), params, qqShareListener);
+        }
+      };
+      this.cordova.getActivity().runOnUiThread(qqRunnable);
+      this.cordova.setActivityResultCallback(this);
     } catch (JSONException e) {
       callbackContext.error(e.getMessage());
     }
@@ -237,9 +250,8 @@ public class QQSDKPlugin extends CordovaPlugin {
    * 分享到QQ空间
    */
   private boolean shareToQzone(CordovaArgs args, CallbackContext callbackContext) {
-    final JSONObject data;
     try {
-
+      final JSONObject data;
       currentCallbackContext = callbackContext;
       data = args.getJSONObject(0);
 
@@ -249,69 +261,89 @@ public class QQSDKPlugin extends CordovaPlugin {
       String targeturl = data.has("targeturl") ?  data.getString("targeturl") : "";
       String imageurl = data.has("imageurl") ?  data.getString("imageurl") : "";
       String audiourl = data.has("audiourl") ?  data.getString("audiourl") : "";
+      String videourl = data.has("videourl") ?  data.getString("videourl") : "";
       String extrascene = data.has("extrascene") ?  data.getString("extrascene") : "";
       String callback = data.has("callback") ?  data.getString("callback") : "";
       String miniprogramappid = data.has("miniprogramappid") ?  data.getString("miniprogramappid") : "";
       String miniprogrampath = data.has("miniprogrampath") ?  data.getString("miniprogrampath") : "";
-      String miniprogramtype = data.has("miniprogramtype") ?  data.getString("miniprogramtype") : "";
+      String miniprogramtype = data.has("miniprogramtype") ?  data.getString("miniprogramtype") : "3";
 
+      ArrayList<String> imageUrls = new ArrayList<String>();
       final Bundle params = new Bundle();
 
-      int ttype = Tencent.SHARE_TO_QQ_TYPE_DEFAULT;
       switch (type) {
-        case "publish": // 发表说说
-          ArrayList<String> imageUrls = new ArrayList<String>();
-          imageUrls.add(processImage(imageurl));
-          params.putString(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.PUBLISH_TO_QZONE_TYPE_PUBLISHMOOD);
-          params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, summary);
-          params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
-          params.putString(QzonePublish.PUBLISH_TO_QZONE_VIDEO_PATH, audiourl);
-          Bundle extParams = new Bundle();
-          extParams.putString(QzonePublish.HULIAN_EXTRA_SCENE, extrascene);
-          extParams.putString(QzonePublish.HULIAN_CALL_BACK, callback);
-          params.putBundle(QzonePublish.PUBLISH_TO_QZONE_EXTMAP, extParams);
-          Runnable zoneRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.publishToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(zoneRunnable);
-          this.cordova.setActivityResultCallback(this);
-          break;
+        // case "audio": // 发表说说
+        // case "video": // 发表说说
+        // case "publish": // 发表说说
+        //   params.putInt(QzonePublish.PUBLISH_TO_QZONE_KEY_TYPE, QzonePublish.PUBLISH_TO_QZONE_TYPE_PUBLISHMOOD);
+        //   // 说说正文
+        //   if (summary.length() > 0) {
+        //     params.putString(QzonePublish.PUBLISH_TO_QZONE_SUMMARY, summary);
+        //   }
+        //   // 图片可选
+        //   if (imageurl.length() > 0) {
+        //     imageUrls.add(processImage(imageurl));
+        //     params.putStringArrayList(QzonePublish.PUBLISH_TO_QZONE_IMAGE_URL, imageUrls);
+        //   }
+        //   // 音乐可选
+        //   if (audiourl.length() > 0) {
+        //     params.putString(QzonePublish.PUBLISH_TO_QZONE_AUDIO_PATH, audiourl);
+        //   }
+        //   // // 视频可选
+        //   // if (videourl.length() > 0) {
+        //   //   params.putString(QzonePublish.PUBLISH_TO_QZONE_VIDEO_PATH, videourl);
+        //   // }
+        //   // 场景可选
+        //   if (extrascene.length() > 0 || callback.length() > 0) {
+        //     Bundle extParams = new Bundle();
+        //     if (extrascene.length() > 0) {
+        //       extParams.putString(QzonePublish.HULIAN_EXTRA_SCENE, extrascene);
+        //     }
+        //     if (callback.length() > 0) {
+        //       extParams.putString(QzonePublish.HULIAN_CALL_BACK, callback);
+        //     }
+        //     params.putBundle(QzonePublish.PUBLISH_TO_QZONE_EXTMAP, extParams);
+        //   }
+        //   break;
         case "miniprogram": // 小程序
-          ArrayList<String> imageUrls = new ArrayList<String>();
-          imageUrls.add(processImage(imageurl));
           params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_MINI_PROGRAM);
-          params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
-          params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
-          params.putString(QQShare.SHARE_TO_QQ_TARGET_URL, targeturl);
+          imageUrls.add(processImage(imageurl));
           params.putStringArrayList(QQShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
+          // 可选
+          if (title.length() > 0) {
+            params.putString(QQShare.SHARE_TO_QQ_TITLE, title);
+          }
+          // 可选
+          if (summary.length() > 0) {
+            params.putString(QQShare.SHARE_TO_QQ_SUMMARY, summary);
+          }
           params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_APPID, miniprogramappid);
           params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_PATH, miniprogrampath);
           params.putString(QQShare.SHARE_TO_QQ_MINI_PROGRAM_TYPE, miniprogramtype);
-          Runnable zoneRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(zoneRunnable);
-          this.cordova.setActivityResultCallback(this);
           break;
+        case "news": // 新闻
         default: // 默认图文
-          params.putString(QzoneShare.SHARE_TO_QQ_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
+          params.putInt(QzoneShare.SHARE_TO_QZONE_KEY_TYPE, QzoneShare.SHARE_TO_QZONE_TYPE_IMAGE_TEXT);
           params.putString(QzoneShare.SHARE_TO_QQ_TITLE, title);//必填
-          params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, summary);//选填
           params.putString(QzoneShare.SHARE_TO_QQ_TARGET_URL, targeturl);//必填
-          params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageurl);
-          Runnable zoneRunnable = new Runnable() {
-            @Override public void run() {
-              mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
-            }
-          };
-          this.cordova.getActivity().runOnUiThread(zoneRunnable);
-          this.cordova.setActivityResultCallback(this);
+          // 摘要可选
+          if (summary.length() > 0) {
+            params.putString(QzoneShare.SHARE_TO_QQ_SUMMARY, summary);//选填
+          }
+          // 图片可选
+          if (imageurl.length() > 0) {
+            imageUrls.add(processImage(imageurl));
+            params.putStringArrayList(QzoneShare.SHARE_TO_QQ_IMAGE_URL, imageUrls);
+          }
           break;
       }
+      Runnable zoneRunnable = new Runnable() {
+        @Override public void run() {
+          mTencent.shareToQzone(QQSDKPlugin.this.cordova.getActivity(), params, qZoneShareListener);
+        }
+      };
+      this.cordova.getActivity().runOnUiThread(zoneRunnable);
+      this.cordova.setActivityResultCallback(this);
     } catch (JSONException e) {
       callbackContext.error(e.getMessage());
     }

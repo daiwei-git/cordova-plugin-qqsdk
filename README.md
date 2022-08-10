@@ -35,55 +35,54 @@ if (QQSDK) {
     /**
     * 检查QQ是否安装
     */
-    QQSDK.checkInstalled(): Promise;
+    QQSDK.checkClientInstalled(): Promise<bool>;
 
     /**
     * 在调用其他SDK接口前调用该接口通知 SDK 用户是否已授权应用获取设备信息的权限，或在应用的取消授权界面中提供用户撤销获取设备信息的权限
     * 
     * 布尔 isPermission 
     */
-    QQSDK.setIsPermissionGranted(isPermission): Promise;
+    QQSDK.setIsPermissionGranted(isPermission): Promise<any>;
 
     /**
     * QQ授权登录
     */
-    QQSDK.login(): Promise;
+    QQSDK.login(): Promise<any>;
 
     /**
     * QQ退出登录
     */
-    QQSDK.logout(): Promise;
+    QQSDK.logout(): Promise<any>;
 
     /**
     * 分享到QQ
     * 
-    * params.type  image: 分享纯图片，audio：分享音乐，miniprogram：分享到小程序，default：分享图文消息
-    * params.title 标题（type为image不生效）
-    * params.summary 摘要（type为image不生效）
-    * params.arkjson 
-    * params.targeturl 目标地址（type为image不生效）
-    * params.imageurl 图片地址（type为image不生效）
-    * params.audiourl 音乐地址（type为image不生效）
-    * params.miniprogramappid type为miniprogram时生效，小程序ID
-    * params.miniprogrampath type为miniprogram时生效，小程序路径
-    * params.miniprogramtype type为miniprogram时生效，小程序类型：默认正式版（3），可选测试版（1）、预览版（4）
+    * params.type  text: 分享纯文本，image: 分享纯图片，audio：分享音乐，miniprogram：分享小程序，default：分享图文消息/新闻消息
+    * params.title 标题（type为text，audio，video，miniprogram，default时生效）
+    * params.summary 摘要（type为audio，video，miniprogram，default时生效）
+    * params.arkjson 参照官网说明
+    * params.targeturl 目标地址（type为audio，video，miniprogram，default时生效）
+    * params.imageurl 图片地址（type为image，audio，video，miniprogram，default时生效）
+    * params.audiourl 音乐地址（type为audio时生效）
+    * params.miniprogramappid 小程序ID（type为miniprogram时生效）
+    * params.miniprogrampath 小程序路径（type为miniprogram时生效）
+    * params.miniprogramtype 小程序类型：默认正式版（3），可选测试版（1）、预览版（4）（type为miniprogram时生效）
     */
-    QQSDK.shareToQQ(params: {}): Promise;
+    QQSDK.shareToQQ(params: {}): Promise<any>;
 
 
     /**
     * 分享到QQ空间
     * 
-    * params.type  publish: 发布说说，miniprogram：分享到小程序，default：分享图文消息
+    * params.type  miniprogram：分享小程序，default：分享图文消息/新闻消息
     * params.title 标题
     * params.summary 摘要
     * params.targeturl 目标地址
     * params.imageurl 图片地址
-    * params.audiourl 音乐地址
     * params.miniprogramappid type为miniprogram时生效，小程序ID
     * params.miniprogrampath type为miniprogram时生效，小程序路径
     * params.miniprogramtype type为miniprogram时生效，小程序类型：默认正式版（3），可选测试版（1）、预览版（4）
     */
-    QQSDK.shareToQzone(params: {}): Promise;
+    QQSDK.shareToQzone(params: {}): Promise<any>;
 }
 ```

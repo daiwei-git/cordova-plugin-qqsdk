@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-plugin-qqsdk" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-qqsdk" version="1.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>QQSDK</name>
     <keywords>cordova,cordova-plugin,daiwei,QQ,QQSDK,QQ登录,QQ分享,QQ空间分享</keywords>
     <description>cordova 集成QQSDK</description>
