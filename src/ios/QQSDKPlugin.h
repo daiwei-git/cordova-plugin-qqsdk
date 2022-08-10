@@ -1,7 +1,6 @@
 #import <Cordova/CDVPlugin.h>
 #import <Cordova/CDVPluginResult.h>
-#import <TencentOpenAPI/TencentOAuth.h>
-#import <TencentOpenAPI/QQApiInterface.h>
+#import <TencentOpenAPI/TencentOpenApiUmbrellaHeader.h>
 
 @interface QQSDKPlugin : CDVPlugin <TencentSessionDelegate, QQApiInterfaceDelegate>
 
