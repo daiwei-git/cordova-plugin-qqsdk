@@ -37,47 +37,8 @@ NSString *appId = @"";
  *  @param command CDVInvokedUrlCommand
  */
 - (void)checkClientInstalled:(CDVInvokedUrlCommand *)command {
-    NSDictionary *args = [command.arguments objectAtIndex:0];
-    int type = [[args valueForKey:@"client"] intValue];
-    if(type == 0) {
-        [tencentOAuth setAuthShareType:AuthShareType_QQ];
-        [self checkQQInstalled:command];
-    } else if (type == 1) {
-        [self checkTIMInstalled:command];
-    } else {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
-}
-
-/**
- *  检查QQ官方客户端是否安装
- *
- *  @param command CDVInvokedUrlCommand
- */
-- (void)checkQQInstalled:(CDVInvokedUrlCommand *)command {
-    if ([TencentOAuth iphoneQQInstalled]) {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    } else {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
-}
-
-/**
- *  检查TIM客户端是否安装
- *
- *  @param command CDVInvokedUrlCommand
- */
-- (void)checkTIMInstalled:(CDVInvokedUrlCommand *)command {
-    if ([TencentOAuth iphoneTIMInstalled]) {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    } else {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:[QQApiInterface isSupportShareToQQ]];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 /**
@@ -87,7 +48,10 @@ NSString *appId = @"";
  */
 - (void)setIsPermissionGranted:(CDVInvokedUrlCommand *)command {
     self.callback = command.callbackId;
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    NSDictionary *args = [command.arguments objectAtIndex:0];
+    bool isPermissionGranted = [[args valueForKey:@"isPermissionGranted"] boolValue];
+    [TencentOAuth setIsUserAgreedAuthorization:isPermissionGranted];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:true];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -98,9 +62,10 @@ NSString *appId = @"";
  */
 - (void)logout:(CDVInvokedUrlCommand *)command {
     self.callback = command.callbackId;
+    if (nil == tencentOAuth) {
+        tencentOAuth = [[TencentOAuth alloc] initWithAppId:appId andDelegate:self];
+    }
     [tencentOAuth logout:self];
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 /**
@@ -128,14 +93,12 @@ NSString *appId = @"";
                                         kOPEN_PERMISSION_GET_VIP_RICH_INFO,
                                         nil];
     int type = [[args valueForKey:@"client"] intValue];
-    if (type == 0) {
-        [tencentOAuth setAuthShareType:AuthShareType_QQ];
-    } else if (type == 1) {
+    if (type == 2) {
         [tencentOAuth setAuthShareType:AuthShareType_TIM];
+    } else {
+        [tencentOAuth setAuthShareType:AuthShareType_QQ];
     }
     [tencentOAuth authorize:permissions];
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 /**
@@ -145,9 +108,13 @@ NSString *appId = @"";
  */
 - (void)shareToQQ:(CDVInvokedUrlCommand *)command {
     @try {
+        if (nil == tencentOAuth) {
+            tencentOAuth = [[TencentOAuth alloc] initWithAppId:appId andDelegate:self];
+        }
         self.callback = command.callbackId;
         NSDictionary *args = [command.arguments objectAtIndex:0];
 
+        int client = [[args objectForKey:@"client"] intValue];
         NSString *type = [args objectForKey:@"type"];
         NSString *title = [args objectForKey:@"title"];
         NSString *summary = [args objectForKey:@"summary"];
@@ -163,16 +130,33 @@ NSString *appId = @"";
         SendMessageToQQReq *req = NULL;
         if ([type isEqualToString: @"text"]) { // 纯文本
             QQApiTextObject *txtObj = [QQApiTextObject objectWithText: title];
+            if (client == 2) {
+                txtObj.shareDestType = AuthShareType_TIM;
+            } else {
+                txtObj.shareDestType = AuthShareType_QQ;
+            }
+            [txtObj setCflag:kQQAPICtrlFlagQQShare];
             req = [SendMessageToQQReq reqWithContent:txtObj];
         } else if ([type isEqualToString: @"image"]) { // 纯图片
             NSData *imgData = [self processImage: imageurl];
             QQApiImageObject *imgObj = [QQApiImageObject objectWithData:imgData previewImageData: imgData title: title description: summary];
+            [imgObj setCflag:kQQAPICtrlFlagQQShare];
+            if (client == 2) {
+                imgObj.shareDestType = AuthShareType_TIM;
+            } else {
+                imgObj.shareDestType = AuthShareType_QQ;
+            }
             req = [SendMessageToQQReq reqWithContent:imgObj];
         } else if ([type isEqualToString: @"audio"]) { // 音乐
             NSData *imgData = [self processImage: imageurl];
             QQApiAudioObject *audioObj =[QQApiAudioObject objectWithURL :[NSURL URLWithString:audiourl] title: title description: summary previewImageData: imgData];
             [audioObj setCflag:kQQAPICtrlFlagQQShare];
             [audioObj setFlashURL:[NSURL URLWithString:audiourl]];
+            if (client == 2) {
+                audioObj.shareDestType = AuthShareType_TIM;
+            } else {
+                audioObj.shareDestType = AuthShareType_QQ;
+            }
             req = [SendMessageToQQReq reqWithContent:audioObj];
         // } else if ([type isEqualToString: @"video"]) { // 视频
             //     NSData *imgData = [self processImage: imageurl];
@@ -182,6 +166,12 @@ NSString *appId = @"";
         } else if ([type isEqualToString: @"miniprogram"]) { // 小程序
             NSData *imageData = [self processImage: imageurl];
             QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:targeturl] title: title description: summary previewImageData: imageData];
+            if (client == 2) {
+                newsObj.shareDestType = AuthShareType_TIM;
+            } else {
+                newsObj.shareDestType = AuthShareType_QQ;
+            }
+            [newsObj setCflag:kQQAPICtrlFlagQQShare];
             QQApiMiniProgramObject *miniObj = [QQApiMiniProgramObject new];
             miniObj.qqApiObject = newsObj;
             miniObj.miniAppID = miniprogramappid;
@@ -192,6 +182,12 @@ NSString *appId = @"";
         } else { // 默认图文 = 新闻
             NSData *imageData = [self processImage: imageurl];
             QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:targeturl] title: title description: summary previewImageData: imageData];
+            if (client == 2) {
+                newsObj.shareDestType = AuthShareType_TIM;
+            } else {
+                newsObj.shareDestType = AuthShareType_QQ;
+            }
+            [newsObj setCflag:kQQAPICtrlFlagQQShare];
             req = [SendMessageToQQReq reqWithContent:newsObj];
         }
         QQApiSendResultCode ret = [QQApiInterface sendReq:req];
@@ -209,9 +205,13 @@ NSString *appId = @"";
  */
 - (void)shareToQzone:(CDVInvokedUrlCommand *)command {
     @try {
+        if (nil == tencentOAuth) {
+            tencentOAuth = [[TencentOAuth alloc] initWithAppId:appId andDelegate:self];
+        }
         self.callback = command.callbackId;
         NSDictionary *args = [command.arguments objectAtIndex:0];
 
+        int client = [[args objectForKey:@"client"] intValue];
         NSString *type = [args objectForKey:@"type"];
         NSString *title = [args objectForKey:@"title"];
         NSString *summary = [args objectForKey:@"summary"];
@@ -230,6 +230,11 @@ NSString *appId = @"";
             QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:targeturl] title: title description: summary previewImageData: imageData];
             newsObj.cflag |= kQQAPICtrlFlagQQShareEnableMiniProgram;
             newsObj.cflag |= kQQAPICtrlFlagQZoneShareOnStart;
+            if (client == 2) {
+                newsObj.shareDestType = AuthShareType_TIM;
+            } else {
+                newsObj.shareDestType = AuthShareType_QQ;
+            }
             QQApiMiniProgramObject *miniObj = [QQApiMiniProgramObject new];
             miniObj.qqApiObject = newsObj;
             miniObj.miniAppID = miniprogramappid;
@@ -253,6 +258,11 @@ NSString *appId = @"";
             NSData *imageData = [self processImage: imageurl];
             QQApiNewsObject *newsObj = [QQApiNewsObject objectWithURL :[NSURL URLWithString:targeturl] title: title description: summary previewImageData: imageData];
             newsObj.cflag |= kQQAPICtrlFlagQZoneShareOnStart;
+            if (client == 2) {
+                newsObj.shareDestType = AuthShareType_TIM;
+            } else {
+                newsObj.shareDestType = AuthShareType_QQ;
+            }
             req = [SendMessageToQQReq reqWithContent:newsObj];
         }
         QQApiSendResultCode ret = [QQApiInterface SendReqToQZone:req];

@@ -3,21 +3,14 @@ var cordova = require('cordova');
 module.exports = {
 	/**
 	 * 检查QQ客户端是否安装
-	 * 
-	 * @param {*} isPermissionGranted 
 	 */
-	checkClientInstalled: function(client) {
+	checkClientInstalled: function() {
 		return new Promise(function(resolve, reject) {
-			if (client == undefined) {
-				client = 0;
-			}
 			cordova.exec((res) => {
 				resolve(res);
 			  }, (res) => {
 				reject(res);
-			  }, "QQSDK", "checkClientInstalled", [{
-					client: client
-				}]);
+			  }, "QQSDK", "checkClientInstalled", []);
 		});
 	},
 	
@@ -40,14 +33,22 @@ module.exports = {
 
 	/**
 	 * 调起QQ登录
+	 * @param {*} client 客户端 1 = QQ（默认），2 = tim
 	 */
-	login: function() {
+	login: function(client) {
 		return new Promise(function(resolve, reject) {
+			if(client === undefined) {
+				client = 1;
+			}
 			cordova.exec((res) => {
 				resolve(res);
 			  }, (res) => {
 				reject(res);
-			  }, "QQSDK", "login", []);
+			  }, "QQSDK", "login", [
+					{
+						client: client
+					}
+				]);
 		});
 	},
 	

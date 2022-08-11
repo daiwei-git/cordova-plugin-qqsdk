@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-plugin-qqsdk" version="1.1.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-qqsdk" version="1.1.3" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>QQSDK</name>
     <keywords>cordova,cordova-plugin,daiwei,QQ,QQSDK,QQ登录,QQ分享,QQ空间分享</keywords>
     <description>cordova 集成QQSDK</description>
@@ -8,7 +8,6 @@
         <clobbers target="QQSDK" />
     </js-module>
     <preference name="QQ_APP_ID" />
-
     <!-- android -->
     <platform name="android">
         <!-- 依赖 -->
@@ -18,7 +17,6 @@
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="QQSDK" >
                 <param name="android-package" value="com.daiwei.qqsdk.plugin.QQSDKPlugin"/>
-                <param name="onload" value="true" />
             </feature>
             <!--whitelist for QQ SDK-->
             <access origin = "https://openmobile.qq.com/*"/>
@@ -32,7 +30,6 @@
 
             <preference name="QQ_APP_ID" value="$QQ_APP_ID" />
         </config-file>
-
         <!--permission for QQ SDK -->
         <config-file target="app/src/main/AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -65,30 +62,27 @@
         <header-file src="src/ios/QQSDKPlugin.h" />
         <source-file src="src/ios/QQSDKPlugin.m" />
         <!-- 配置 -->
-        <config-file target="config.xml" parent="/*">
+        <config-file target="config.xml" parent="/widget/plugins">
             <feature name="QQSDK">
-                <param name="ios-package" value="CDVQQSDK"/>
-                <param name="onload" value="true" />
+                <param name="ios-package" value="QQSDKPlugin"/>
             </feature>
             <preference name="QQ_APP_ID" value="$QQ_APP_ID" />
         </config-file>
-
         <!--set ios URLTypes for QQ SDK -->
         <config-file target="*-Info.plist" parent="CFBundleURLTypes">
-        <array>
-            <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLName</key>
-            <string>tencentopenapi</string>
-            <key>CFBundleURLSchemes</key>
             <array>
-                <string>tencent$QQ_APP_ID</string>
+                <dict>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>CFBundleURLName</key>
+                <string>tencentopenapi</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>tencent$QQ_APP_ID</string>
+                </array>
+                </dict>
             </array>
-            </dict>
-        </array>
         </config-file>
-
         <!--scheme query whitlist-->
         <config-file platform="ios" target="*-Info.plist" parent="LSApplicationQueriesSchemes">
             <array>
@@ -135,7 +129,6 @@
                 <string>timapiV1</string>
             </array>
         </config-file>
-
         <!--required frameworks for qq sdk-->
         <framework src="CoreGraphics.framework" />
         <framework src="CoreTelephony.framework" />
@@ -145,7 +138,7 @@
         <framework src="libsqlite3.tbd" />
         <framework src="libstdc++.tbd" />
         <framework src="libz.tbd" />
-        <!--QQ SDK version 3.2.3-->
+        <!--QQ SDK version 3.5.11-->
         <framework src="src/ios/TencentOpenAPI.framework" custom="true" framework="true"/>
         <resource-file src="src/ios/TencentOpenApi_IOS_Bundle.bundle" />
     </platform>

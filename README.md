@@ -45,9 +45,9 @@ if (QQSDK) {
     QQSDK.setIsPermissionGranted(isPermission): Promise<any>;
 
     /**
-    * QQ授权登录
+    * QQ授权登录 client 客户端 1 = QQ（默认），2 = tim
     */
-    QQSDK.login(): Promise<any>;
+    QQSDK.login(client): Promise<any>;
 
     /**
     * QQ退出登录
@@ -57,6 +57,7 @@ if (QQSDK) {
     /**
     * 分享到QQ
     * 
+    * params.client 客户端 1 = QQ（默认），2 = tim
     * params.type  text: 分享纯文本，image: 分享纯图片，audio：分享音乐，miniprogram：分享小程序，default：分享图文消息/新闻消息
     * params.title 标题（type为text，audio，video，miniprogram，default时生效）
     * params.summary 摘要（type为audio，video，miniprogram，default时生效）
@@ -74,6 +75,7 @@ if (QQSDK) {
     /**
     * 分享到QQ空间
     * 
+    * params.client 客户端 1 = QQ（默认），2 = tim
     * params.type  miniprogram：分享小程序，default：分享图文消息/新闻消息
     * params.title 标题
     * params.summary 摘要
