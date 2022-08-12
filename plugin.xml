@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-plugin-qqsdk" version="1.1.3" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-qqsdk" version="1.1.5" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>QQSDK</name>
     <keywords>cordova,cordova-plugin,daiwei,QQ,QQSDK,QQ登录,QQ分享,QQ空间分享</keywords>
     <description>cordova 集成QQSDK</description>
@@ -16,7 +16,7 @@
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="QQSDK" >
-                <param name="android-package" value="com.daiwei.qqsdk.plugin.QQSDKPlugin"/>
+                <param name="android-package" value="com.daiwei.qqsdk.cdv.QQSDKPlugin"/>
             </feature>
             <!--whitelist for QQ SDK-->
             <access origin = "https://openmobile.qq.com/*"/>
@@ -38,17 +38,17 @@
         </config-file>
         <!--QQ webview Auth Activity -->
         <config-file target="app/src/main/AndroidManifest.xml" parent="/manifest/application">
-        <activity
-                android:name="com.tencent.tauth.AuthActivity"
-                android:noHistory="true"
-                android:launchMode="singleTask" >
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="tencent$QQ_APP_ID"/>
-            </intent-filter>
-        </activity>
+            <activity
+                    android:name="com.tencent.tauth.AuthActivity"
+                    android:noHistory="true"
+                    android:launchMode="singleTask" >
+                <intent-filter>
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data android:scheme="tencent$QQ_APP_ID"/>
+                </intent-filter>
+            </activity>
             <activity
             android:name="com.tencent.connect.common.AssistActivity"
             android:configChanges="orientation|keyboardHidden"

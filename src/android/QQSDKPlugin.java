@@ -1,4 +1,4 @@
-package com.daiwei.qqsdk.plugin;
+package com.daiwei.qqsdk.cdv;
 
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
